@@ -1,0 +1,22 @@
+if ! flatpak override --user --show io.gitlab.librewolf-community | grep -q "/run/user/$UID/psd"; then
+    flatpak override --user io.gitlab.librewolf-community --filesystem=/run/user/$UID/psd
+fi
+
+if [[ -d "$HOME"/.var/app/io.gitlab.librewolf-community/.librewolf ]] && [[ -d "$HOME"/.var/app/io.gitlab.librewolf-community/cache/librewolf ]]; then
+    index=0
+    PSNAME="$browser"
+    while read -r profileItem; do
+        if [[ $(echo "$profileItem" | cut -c1) = "/" ]]; then
+            # path is not relative, so we have to use basename
+            profileName=$(basename "$profileItem")
+            DIRArr[$index]="$HOME/.var/app/io.gitlab.librewolf-community/cache/librewolf/$profileName"
+        else
+            # we need to append the default path to give a
+            # fully qualified path
+            DIRArr[$index]="$HOME/.var/app/io.gitlab.librewolf-community/cache/librewolf/$profileItem"
+        fi
+        (( index=index+1 ))
+    done < <(grep '[Pp]'ath= "$HOME"/.var/app/io.gitlab.librewolf-community/.librewolf/profiles.ini | sed 's/[Pp]ath=//')
+fi
+
+check_suffix=1
